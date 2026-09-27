@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Reveal } from "@/components/Reveal";
 import bookCover from "@/assets/book-cover.png";
 
@@ -52,39 +52,27 @@ function Ornament() {
   );
 }
 
-type TipoEntrega = "retirada" | "correio";
+type TipoEntrega = "correio";
 
-const ENTREGAS: {
+const ENTREGA_UNICA: {
   id: TipoEntrega;
   titulo: string;
   preco: string;
   descricao: string;
   linkPagamento: string;
-}[] = [
-  {
-    id: "retirada",
-    titulo: "Retirar no dia do lançamento",
-    preco: "R$ 39,90",
-    descricao:
-      "Você retira seu exemplar pessoalmente no dia 26 de setembro de 2026, no salão da Paróquia Perpétuo Socorro, em Taguatinga Centro.",
-    linkPagamento: "https://mpago.li/1gAGXQ1",
-  },
-  {
-    id: "correio",
-    titulo: "Receber em casa pelos Correios",
-    preco: "R$ 59,90",
-    descricao:
-      "Para a sua comodidade, o exemplar é enviado pelos Correios (frete grátis) direto para a sua residência, a partir da data do lançamento.",
-    linkPagamento: "https://mpago.li/1sYScuJ",
-  },
-];
+} = {
+  id: "correio",
+  titulo: "Receber em casa pelos Correios",
+  preco: "R$ 59,90",
+  descricao:
+    "Para a sua comodidade, o exemplar é enviado pelos Correios (frete grátis) direto para a sua residência, a partir da data do lançamento.",
+  linkPagamento: "https://mpago.li/1sYScuJ",
+};
 
 function ReservaForm() {
-  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
-  const [entrega, setEntrega] = useState<TipoEntrega>("retirada");
   const [bairro, setBairro] = useState("");
   const [endereco, setEndereco] = useState("");
   const [numero, setNumero] = useState("");
@@ -94,7 +82,7 @@ function ReservaForm() {
   const [cep, setCep] = useState("");
   const [sent, setSent] = useState(false);
 
-  const opcaoEscolhida = ENTREGAS.find((o) => o.id === entrega)!;
+  const opcaoEscolhida = ENTREGA_UNICA;
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -109,9 +97,13 @@ function ReservaForm() {
         whatsapp,
         entrega: opcaoEscolhida.titulo,
         preco: opcaoEscolhida.preco,
-        ...(entrega === "correio"
-          ? { bairro, endereco, numero, complemento, estado, cidade, cep }
-          : {}),
+        bairro,
+        endereco,
+        numero,
+        complemento,
+        estado,
+        cidade,
+        cep,
       }),
     }).catch(() => {
       // Envio silencioso: falha aqui não deve impedir a confirmação ao usuário.
@@ -119,14 +111,9 @@ function ReservaForm() {
 
     setSent(true);
 
-    // Retirada segue para a página de pagamento (Pix em foco).
-    // Correios segue direto para o Mercado Pago (várias formas de pagamento).
+    // Segue direto para o Mercado Pago (várias formas de pagamento).
     setTimeout(() => {
-      if (entrega === "retirada") {
-        navigate({ to: "/pagamento", search: { entrega: "retirada" } });
-      } else {
-        window.location.href = opcaoEscolhida.linkPagamento;
-      }
+      window.location.href = opcaoEscolhida.linkPagamento;
     }, 900);
   }
 
@@ -149,43 +136,16 @@ function ReservaForm() {
       autoComplete="off"
       className="mx-auto flex max-w-md flex-col gap-4 text-left"
     >
-      <div>
-        <p className="text-base text-cream/70">
-          Como você prefere receber seu exemplar?
+      <div className="rounded-lg border border-gold bg-cream/10 px-4 py-5">
+        <p className="font-display text-xl text-cream">
+          {opcaoEscolhida.titulo}
         </p>
-        <div className="mt-2 grid gap-3 sm:grid-cols-2">
-          {ENTREGAS.map((o) => {
-            const selecionada = o.id === entrega;
-            return (
-              <button
-                key={o.id}
-                type="button"
-                onClick={() => setEntrega(o.id)}
-                aria-pressed={selecionada}
-                className={`relative rounded-lg border px-4 py-5 text-left transition-colors ${
-                  selecionada
-                    ? "border-gold bg-cream/10"
-                    : "border-gold/25 bg-cream/5 hover:border-gold/50"
-                }`}
-              >
-                {selecionada && (
-                  <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gold px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-background">
-                    ✓ Selecionado
-                  </span>
-                )}
-                <p className="font-display text-xl text-cream">
-                  {o.titulo}
-                </p>
-                <p className="mt-1 font-display text-2xl text-gold-soft">
-                  {o.preco}
-                </p>
-                <p className="mt-2 text-base leading-relaxed text-cream/70">
-                  {o.descricao}
-                </p>
-              </button>
-            );
-          })}
-        </div>
+        <p className="mt-1 font-display text-2xl text-gold-soft">
+          {opcaoEscolhida.preco}
+        </p>
+        <p className="mt-2 text-base leading-relaxed text-cream/70">
+          {opcaoEscolhida.descricao}
+        </p>
       </div>
 
       <div>
@@ -234,10 +194,8 @@ function ReservaForm() {
         />
       </div>
 
-      {entrega === "correio" && (
-        <>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 sm:col-span-1">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="col-span-2 sm:col-span-1">
               <label
                 htmlFor="reserva-endereco"
                 className="text-sm text-cream/70"
@@ -367,15 +325,6 @@ function ReservaForm() {
               placeholder="00000-000"
             />
           </div>
-        </>
-      )}
-
-      <div className="rounded-lg border border-gold/30 bg-cream/5 px-4 py-3 text-sm text-cream/85">
-        Você escolheu:{" "}
-        <strong className="text-gold-soft">
-          {opcaoEscolhida.titulo} — {opcaoEscolhida.preco}
-        </strong>
-      </div>
 
       <button type="submit" className="btn-gold btn-gold-hover mt-2">
         Quero reservar meu exemplar
