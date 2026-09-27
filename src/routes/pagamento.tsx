@@ -10,8 +10,8 @@ const PIX_COPIA_COLA_RETIRADA =
 export const Route = createFileRoute("/pagamento")({
   validateSearch: (search: Record<string, unknown>): { entrega?: Entrega } => ({
     entrega:
-      search.entrega === "retirada" || search.entrega === "correio"
-        ? (search.entrega as Entrega)
+      search["entrega"] === "retirada" || search["entrega"] === "correio"
+        ? (search["entrega"] as Entrega)
         : undefined,
   }),
   head: () => ({
